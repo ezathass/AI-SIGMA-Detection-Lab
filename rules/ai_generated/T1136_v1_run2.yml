@@ -1,0 +1,47 @@
+title: Local User Account Creation or Addition to Local Administrators Group
+id: 7c3e9a41-5b2d-4f8e-9a6c-1d4b8e2f0a73
+status: experimental
+description: |
+    Detects the creation of a new user account (Event ID 4720) or the addition of a member
+    to the built-in local Administrators group (Event ID 4732 with group SID S-1-5-32-544).
+    Adversaries may create local accounts or elevate existing accounts to maintain persistence
+    or escalate privileges on a host.
+references:
+    - https://attack.mitre.org/techniques/T1136/001/
+    - https://attack.mitre.org/techniques/T1098/
+    - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4720
+    - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4732
+author: Detection Engineering
+date: 2026-10-13
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1136.001
+    - attack.t1098
+logsource:
+    product: windows
+    service: security
+detection:
+    selection_user_created:
+        EventID: 4720
+    selection_admin_group_add:
+        EventID: 4732
+        TargetSid: 'S-1-5-32-544'
+    condition: selection_user_created or selection_admin_group_add
+fields:
+    - EventID
+    - SubjectUserName
+    - SubjectDomainName
+    - SubjectLogonId
+    - TargetUserName
+    - TargetDomainName
+    - TargetSid
+    - MemberName
+    - MemberSid
+    - Computer
+falsepositives:
+    - Legitimate account provisioning by system administrators or IT staff
+    - Software installers or management tools (e.g., SCCM, Intune, LAPS) that create service or admin accounts
+    - Initial system build or imaging processes
+    - On domain controllers, Event ID 4720 also fires for domain account creation, which may be expected activity
+level: medium

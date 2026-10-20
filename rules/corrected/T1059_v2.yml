@@ -1,0 +1,45 @@
+title: PowerShell Execution With Base64 Encoded Command (corrected v2)
+id: 5b7d1e2a-9c43-4f6e-8a21-0d3c6b9e4f72
+status: experimental
+description: |
+    Corrected version of AI run 1. The windash modifier (unsupported by Chainsaw v2.16.5)
+    is replaced by explicit '-' and '/' variants. Adds SigmaHQ's ' -Encoding ' filter,
+    because ' -enco' would otherwise match the benign -Encoding parameter.
+references:
+    - https://attack.mitre.org/techniques/T1059/001/
+author: Ezat Hassan (corrected from AI output)
+date: 2026-10-13
+tags:
+    - attack.execution
+    - attack.t1059.001
+    - attack.defense-evasion
+    - attack.t1027
+logsource:
+    category: process_creation
+    product: windows
+detection:
+    selection_img:
+        - Image|endswith:
+              - '\powershell.exe'
+              - '\pwsh.exe'
+        - OriginalFileName:
+              - 'PowerShell.EXE'
+              - 'pwsh.dll'
+    selection_cli:
+        CommandLine|contains:
+            - ' -e '
+            - ' /e '
+            - ' -en '
+            - ' /en '
+            - ' -enc '
+            - ' /enc '
+            - ' -enco'
+            - ' /enco'
+            - ' -ec '
+            - ' /ec '
+    filter_encoding:
+        CommandLine|contains: ' -Encoding '
+    condition: all of selection_* and not filter_encoding
+falsepositives:
+    - Legitimate admin, deployment, or monitoring tools that use -EncodedCommand
+level: medium

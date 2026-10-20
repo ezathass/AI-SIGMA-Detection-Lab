@@ -1,0 +1,42 @@
+title: Windows Event Log Cleared
+id: e2da22c5-18d8-4176-94ce-0593c80ffa6a
+related:
+    - id: 3f6b2c8e-9a41-4d7e-b5c2-8e1f0a7d4c93
+      type: derived
+status: experimental
+description: |
+    Detects the clearing of Windows event logs, such as the Security or System log.
+    Event ID 1102 is written to the Security log by the Microsoft-Windows-Eventlog provider when it is
+    cleared, and Event ID 104 is written to the System log when any event log is cleared.
+    Corrected version of AI-generated run 1: detection logic unchanged (4/4, no false positives);
+    metadata fixed (status, id, incorrect provider).
+references:
+    - https://attack.mitre.org/techniques/T1070/001/
+    - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-1102
+author: Ezat Hassan (corrected from AI-generated v1 run 1)
+date: 2026-10-13
+modified: 2026-10-15
+tags:
+    - attack.defense-evasion
+    - attack.t1070.001
+logsource:
+    product: windows
+detection:
+    selection_security_cleared:
+        Channel: 'Security'
+        Provider_Name: 'Microsoft-Windows-Eventlog'
+        EventID: 1102
+    selection_system_cleared:
+        Channel: 'System'
+        Provider_Name: 'Microsoft-Windows-Eventlog'
+        EventID: 104
+    condition: 1 of selection_*
+fields:
+    - Computer
+    - Channel
+    - EventID
+falsepositives:
+    - Legitimate log clearing by administrators during maintenance or troubleshooting
+    - Re-imaging, decommissioning, or rebuilding of systems
+    - Lab or test environments where logs are cleared before recording scenarios
+level: high

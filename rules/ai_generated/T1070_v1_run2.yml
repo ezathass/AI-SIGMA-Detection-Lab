@@ -1,0 +1,41 @@
+title: Windows Event Log Cleared
+id: 3f6c2a91-8b7e-4d5a-9c1f-2e8b6a4d7f03
+status: stable
+description: |
+    Detects clearing of Windows event logs, a common anti-forensics technique used by attackers
+    to hide their activity. Event ID 1102 is generated when the Security log is cleared, and
+    Event ID 104 is generated when the System log or any other log is cleared
+    (e.g., via wevtutil cl, Clear-EventLog, the Event Viewer GUI, or the Win32 ClearEventLog API).
+references:
+    - https://attack.mitre.org/techniques/T1070/001/
+    - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-1102
+    - https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/wevtutil
+author: Detection Engineering
+date: 2026-10-13
+tags:
+    - attack.defense-evasion
+    - attack.t1070.001
+logsource:
+    product: windows
+detection:
+    selection_security_cleared:
+        Channel: 'Security'
+        Provider_Name: 'Microsoft-Windows-Eventlog'
+        EventID: 1102
+    selection_other_log_cleared:
+        Channel: 'System'
+        Provider_Name: 'Microsoft-Windows-Eventlog'
+        EventID: 104
+    condition: 1 of selection_*
+fields:
+    - Computer
+    - SubjectUserName
+    - SubjectDomainName
+    - SubjectLogonId
+    - Channel
+    - EventID
+falsepositives:
+    - Legitimate administrative log maintenance or troubleshooting by system administrators
+    - Scheduled log rotation or cleanup scripts
+    - System reimaging or provisioning processes in lab or test environments
+level: high

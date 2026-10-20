@@ -1,0 +1,49 @@
+title: Local User Account Creation or Addition to Local Administrators Group
+id: 3f8c2a1e-7b4d-4c9a-9e2f-6a1d5b8c0e47
+status: experimental
+description: |
+    Detects the creation of a new user account (Event ID 4720) or the addition of a member
+    to the built-in local Administrators group (Event ID 4732 with group SID S-1-5-32-544).
+    Adversaries may create local accounts or elevate existing accounts to maintain persistent,
+    privileged access to a host. The Administrators group is matched by its well-known SID
+    so detection works regardless of OS display language.
+references:
+    - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4720
+    - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4732
+    - https://attack.mitre.org/techniques/T1136/001/
+    - https://attack.mitre.org/techniques/T1098/
+author: Detection Engineering
+date: 2026-10-13
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1136.001
+    - attack.t1098
+logsource:
+    product: windows
+    service: security
+    definition: 'Requirements: Audit User Account Management and Audit Security Group Management must be enabled (Success).'
+detection:
+    selection_user_created:
+        EventID: 4720
+    selection_admin_group_add:
+        EventID: 4732
+        TargetSid: 'S-1-5-32-544'
+    condition: selection_user_created or selection_admin_group_add
+fields:
+    - EventID
+    - SubjectUserName
+    - SubjectDomainName
+    - SubjectLogonId
+    - TargetUserName
+    - TargetDomainName
+    - TargetSid
+    - MemberName
+    - MemberSid
+    - Computer
+falsepositives:
+    - Legitimate account provisioning by system administrators or IT automation (e.g., SCCM, Intune, LAPS, configuration management tools)
+    - Software installers that create local service accounts
+    - Initial OS deployment and imaging processes
+    - Domain account creation logged on domain controllers (Event ID 4720 also fires for domain accounts on DCs; consider scoping to member servers and workstations)
+level: medium

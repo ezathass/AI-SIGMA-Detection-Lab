@@ -1,0 +1,52 @@
+title: Local User Account Created or Added to Local Administrators Group
+id: d659fe49-92f7-42b3-8104-f0748d037531
+related:
+    - id: 8f3c2a91-6d4e-4b7a-9c15-2e7f0d3b6a48
+      type: derived
+status: experimental
+description: |
+    Detects the creation of a new local user account (Event ID 4720) or the addition of a member
+    to the built-in local Administrators group (Event ID 4732 with the well-known Administrators SID).
+    Corrected version of AI-generated run 1: the machine-account filter (TargetUserName ending in '$')
+    was removed because attackers name accounts with a trailing '$' to imitate computer accounts.
+references:
+    - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4720
+    - https://learn.microsoft.com/en-us/windows/security/threat-protection/auditing/event-4732
+    - https://attack.mitre.org/techniques/T1136/001/
+    - https://attack.mitre.org/techniques/T1098/
+author: Ezat Hassan (corrected from AI-generated v1 run 1)
+date: 2026-10-13
+modified: 2026-10-15
+tags:
+    - attack.persistence
+    - attack.privilege-escalation
+    - attack.t1136.001
+    - attack.t1098
+logsource:
+    product: windows
+    service: security
+    definition: 'Requires "Audit User Account Management" and "Audit Security Group Management" (Success) to be enabled'
+detection:
+    selection_user_created:
+        EventID: 4720
+    selection_admin_group_add:
+        EventID: 4732
+        TargetSid: 'S-1-5-32-544'
+    condition: 1 of selection_*
+fields:
+    - EventID
+    - SubjectUserName
+    - SubjectDomainName
+    - SubjectLogonId
+    - TargetUserName
+    - TargetDomainName
+    - TargetSid
+    - MemberName
+    - MemberSid
+    - Computer
+falsepositives:
+    - Legitimate account provisioning by system administrators or IT staff
+    - Software installers or configuration management (e.g., SCCM, Intune, Ansible) that create service accounts or manage local admin membership
+    - LAPS or other privileged access management solutions adjusting local group membership
+    - Computer accounts end in '$'. Tune by excluding known provisioning sources (SubjectUserName), never by the account name alone, because a trailing '$' is a known evasion technique
+level: medium

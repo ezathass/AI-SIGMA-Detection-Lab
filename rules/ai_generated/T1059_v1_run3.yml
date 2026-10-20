@@ -1,0 +1,48 @@
+title: PowerShell Execution With Base64 Encoded Command
+id: 3f6c2a91-8d4e-4b7a-9c15-2e7f0a6b9d43
+status: experimental
+description: |
+  Detects PowerShell (Windows PowerShell or PowerShell Core) launched with the -EncodedCommand
+  parameter or one of its abbreviations (-e, -en, -enc, -ec, -enco...). Attackers often use
+  Base64-encoded commands to hide what they run and to evade command-line inspection.
+references:
+  - https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_powershell_exe
+  - https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_pwsh
+  - https://attack.mitre.org/techniques/T1059/001/
+  - https://attack.mitre.org/techniques/T1027/
+author: Detection Engineering
+date: 2026-10-13
+tags:
+  - attack.execution
+  - attack.t1059.001
+  - attack.defense-evasion
+  - attack.t1027
+logsource:
+  category: process_creation
+  product: windows
+detection:
+  selection_img:
+    - Image|endswith:
+        - '\powershell.exe'
+        - '\pwsh.exe'
+    - OriginalFileName:
+        - 'PowerShell.EXE'
+        - 'pwsh.dll'
+  selection_cli:
+    CommandLine|contains|windash:
+      - ' -e '
+      - ' -en '
+      - ' -enc '
+      - ' -ec '
+      - ' -enco'
+  condition: all of selection_*
+fields:
+  - Image
+  - CommandLine
+  - ParentImage
+  - ParentCommandLine
+  - User
+falsepositives:
+  - Legitimate administrative or deployment scripts (e.g., SCCM/Intune, RMM agents, installers) that pass encoded commands to avoid quoting issues
+  - Some vendor software and monitoring tools that invoke PowerShell with -EncodedCommand
+level: medium

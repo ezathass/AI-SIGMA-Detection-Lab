@@ -1,0 +1,3 @@
+# Never publish raw logs (benign logs contain personal info; attack samples are third-party)
+data/
+*.evtx
